@@ -84,17 +84,16 @@ function print_block(io, m::Markdownblock)
 end
 
 function simpleweave(input, output; doctype = "md2html", kwargs...)
-    mktempdir() do path
-        filepath = joinpath(path, "temp.jmd")
+    path = pwd()
+    mktemp(pwd()) do filepath, io
         blocks = convert_to_blocks(input)
         weavestring = blocks_to_string(blocks)
-        write(filepath, weavestring)
+        write(io, weavestring)
         Weave.weave(filepath;
             doctype = doctype,
-            out_path = joinpath(path, "tempoutput"),
+            out_path = output,
             kwargs...
         )
-        mv(joinpath(path, "tempoutput"), output, force = true)
     end
 end
 
