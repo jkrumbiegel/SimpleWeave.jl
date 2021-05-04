@@ -84,16 +84,27 @@ function print_block(io, m::Markdownblock)
 end
 
 function simpleweave(input, output; doctype = "md2html", kwargs...)
-    path = pwd()
-    mktemp(pwd()) do filepath, io
-        blocks = convert_to_blocks(input)
-        weavestring = blocks_to_string(blocks)
-        write(filepath, weavestring)
-        Weave.weave(filepath;
+
+    blocks = convert_to_blocks(input)
+    weavestring = blocks_to_string(blocks)
+
+    tempfile = String(rand('a':'z', 20)) * ".jmd"
+    while isfile(tempfile)
+        tempfile = String(rand('a':'z', 20)) * ".jmd"
+    end
+
+    try
+        open(tempfile, "w") do file
+            write(file, weavestring)
+        end
+
+        Weave.weave(tempfile;
             doctype = doctype,
             out_path = output,
             kwargs...
         )
+    finally
+        rm(tempfile)
     end
 end
 
