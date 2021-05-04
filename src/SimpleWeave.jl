@@ -86,7 +86,9 @@ end
 function simpleweave(input, output; doctype = "md2html", kwargs...)
     mktempdir() do path
         filepath = joinpath(path, "temp.jmd")
-        write(filepath, convert_to_weave(input))
+        blocks = convert_to_blocks(input)
+        weavestring = blocks_to_string(blocks)
+        write(filepath, weavestring)
         Weave.weave(filepath;
             doctype = doctype,
             out_path = joinpath(path, "tempoutput"),
