@@ -2,6 +2,11 @@
 
 This package offers a simplified syntax to create documents for use with `Weave.jl`.
 
+```julia
+using SimpleWeave
+simpleweave(input_jl, output_file; doctype = "md2html", weave_kwargs...)
+```
+
 The rules are different:
 
 Text in
