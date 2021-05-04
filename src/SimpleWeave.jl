@@ -88,7 +88,7 @@ function simpleweave(input, output; doctype = "md2html", kwargs...)
     mktemp(pwd()) do filepath, io
         blocks = convert_to_blocks(input)
         weavestring = blocks_to_string(blocks)
-        write(io, weavestring)
+        write(filepath, weavestring)
         Weave.weave(filepath;
             doctype = doctype,
             out_path = output,
