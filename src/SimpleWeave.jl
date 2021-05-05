@@ -83,28 +83,54 @@ function print_block(io, m::Markdownblock)
     println(io, m.block)
 end
 
-function simpleweave(input, output; doctype = "md2html", kwargs...)
+function simpleweave(input, outputfolder; overwrite = true, remove_pdf_aux = true, doctype = "md2html", kwargs...)
+
+    if !isdir(outputfolder)
+        error("output folder $outputfolder doesn't exist or is not a folder")
+    end
 
     blocks = convert_to_blocks(input)
     weavestring = blocks_to_string(blocks)
 
-    tempfile = String(rand('a':'z', 20)) * ".jmd"
-    while isfile(tempfile)
-        tempfile = String(rand('a':'z', 20)) * ".jmd"
-    end
+    jmd_filename = splitext(basename(input))[1] * ".jmd"
 
-    try
-        open(tempfile, "w") do file
+    mktempdir() do path
+        filepath = joinpath(path, jmd_filename)
+
+        open(filepath, "w") do file
             write(file, weavestring)
         end
 
-        Weave.weave(tempfile;
+        temp_output_path = joinpath(path, "weave_output")
+
+        Weave.weave(filepath;
             doctype = doctype,
-            out_path = output,
+            out_path = temp_output_path,
             kwargs...
         )
-    finally
-        rm(tempfile)
+
+        # delete empty folders in the output that weave leaves there
+        for (root, dirs, files) in walkdir(temp_output_path, topdown = false)
+            for dir in dirs
+                if isempty(readdir(joinpath(root, dir)))
+                    rm(joinpath(root, dir))
+                end
+            end
+            if remove_pdf_aux && doctype == "md2pdf"
+                for file in files
+                    if !endswith(file, ".pdf")
+                        rm(joinpath(root, file))
+                    end
+                end
+            end
+        end
+
+        for thing in readdir(temp_output_path)
+            mv(
+                joinpath(temp_output_path, thing),
+                joinpath(outputfolder, thing),
+                force = overwrite)
+        end
     end
 end
 
