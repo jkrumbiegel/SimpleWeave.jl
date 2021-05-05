@@ -85,29 +85,52 @@ end
 
 function simpleweave(input, outputfolder; overwrite = true, remove_pdf_aux = true, doctype = "md2html", kwargs...)
 
+    if isfile(outputfolder)
+        error("$outputfolder is a file, not a folder")
+    end
     if !isdir(outputfolder)
-        error("output folder $outputfolder doesn't exist or is not a folder")
+        @label question1
+        print("Output folder $outputfolder doesn't exist. Create? y/n ")
+        yn = readline()
+        if yn == "n"
+            return
+        elseif yn != "y"
+            @goto question1
+        end
+        mkdir(outputfolder)
     end
 
     blocks = convert_to_blocks(input)
     weavestring = blocks_to_string(blocks)
 
-    jmd_filename = splitext(basename(input))[1] * ".jmd"
+    jmd_filename = splitext(input)[1] * ".jmd"
+    if isfile(jmd_filename)
+        @label question
+        print("Temporary jmd file $jmd_filename already exists. Delete? y/n ")
+        yn = readline()
+        if yn == "n"
+            return
+        elseif yn != "y"
+            @goto question
+        end
+    end
 
     mktempdir() do path
-        filepath = joinpath(path, jmd_filename)
-
-        open(filepath, "w") do file
-            write(file, weavestring)
-        end
-
         temp_output_path = joinpath(path, "weave_output")
 
-        Weave.weave(filepath;
-            doctype = doctype,
-            out_path = temp_output_path,
-            kwargs...
-        )
+        try
+            open(jmd_filename, "w") do file
+                write(file, weavestring)
+            end
+
+            Weave.weave(jmd_filename;
+                doctype = doctype,
+                out_path = temp_output_path,
+                kwargs...
+            )
+        finally
+            rm(jmd_filename)
+        end
 
         # delete empty folders in the output that weave leaves there
         for (root, dirs, files) in walkdir(temp_output_path, topdown = false)
