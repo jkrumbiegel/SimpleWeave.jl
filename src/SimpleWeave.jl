@@ -28,8 +28,16 @@ function convert_to_blocks(inputfile)
     in_markdown = false
     arguments = ""
 
-    newcode() = push!(blocks, Codeblock(strip(String(take!(io))), arguments))
-    newmd() = push!(blocks, Markdownblock(strip(String(take!(io)))))
+    function newcode()
+        push!(blocks, Codeblock(strip(String(take!(io))), arguments))
+        arguments = ""
+        nothing
+    end
+    function newmd()
+        push!(blocks, Markdownblock(strip(String(take!(io)))))
+        arguments = ""
+        nothing
+    end
 
     for line in readlines(inputfile)
         if !in_markdown

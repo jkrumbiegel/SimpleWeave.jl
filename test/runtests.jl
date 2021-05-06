@@ -9,6 +9,7 @@ using Test
         Markdownblock("This is markdown"),
         Codeblock("2 + 3", "echo = false"),
         Markdownblock("Some\nmore\nmarkdown"),
+        Codeblock("1 + 2"),
     ]
 
     io = IOBuffer()
@@ -28,6 +29,10 @@ using Test
     Some
     more
     markdown
+
+    ```julia
+    1 + 2
+    ```
     """
 
     @test output == expected
