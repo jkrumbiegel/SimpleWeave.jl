@@ -48,7 +48,15 @@ function convert_to_blocks(inputfile)
                 newcode()
                 in_markdown = true
             else
-                println(io, line)
+                # try single-line markdown
+                m = match(r"^md\"(.*)\"\s*$", line)
+                if !isnothing(m)
+                    newcode()
+                    println(io, m[1])
+                    newmd()
+                else
+                    println(io, line)
+                end
             end
         else
             if startswith(line, "\"\"\"")
